@@ -24,7 +24,18 @@ app.secret_key = "secret123"
 # ==============================
 
 DATABASE_URL = os.environ.get("MYSQL_URL")
-conn = MySQLdb.connect(DATABASE_URL)
+import urllib.parse as urlparse
+
+urlparse.uses_netloc.append("mysql")
+url = urlparse.urlparse(DATABASE_URL)
+
+conn = MySQLdb.connect(
+    host=url.hostname,
+    user=url.username,
+    passwd=url.password,
+    db=url.path[1:],   # removes the /
+    port=url.port
+)
 
 # ==============================
 # Mail Configuration
