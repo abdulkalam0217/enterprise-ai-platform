@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="card p-4 shadow">
+    <h2 class="mb-3">AI Model Trainer</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <input type="file" class="form-control" name="file" required>
+        </div>
+        <button class="btn btn-primary">Train Model</button>
+    </form>
+
+    {% if accuracy %}
+        <div class="alert alert-success mt-3">
+            Model Accuracy: {{ (accuracy * 100)|round(2) }}%
+        </div>
+    {% endif %}
+
+    {% if error %}
+        <div class="alert alert-danger mt-3">
+            {{ error }}
+        </div>
+    {% endif %}
+</div>
+
+<div class="card p-4 shadow mt-4">
+    <h3>Predict Result</h3>
+
+    <form method="POST">
+        <div class="row">
+            <div class="col">
+                <input type="number" step="any" class="form-control"
+                       name="hours" placeholder="Hours Studied" required>
+            </div>
+            <div class="col">
+                <input type="number" step="any" class="form-control"
+                       name="marks" placeholder="Marks" required>
+            </div>
+        </div>
+        <button class="btn btn-success mt-3">Predict</button>
+    </form>
+
+    {% if prediction %}
+        <div class="alert alert-info mt-3">
+            Prediction: {{ prediction }}
+        </div>
+    {% endif %}
+</div>
+
+{% endblock %}

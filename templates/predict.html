@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <div class="card p-4 shadow">
+        <h3>Upload CSV For Prediction</h3>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="file" class="form-control mb-3" required>
+            <button class="btn btn-primary">Predict</button>
+        </form>
+
+        {% if error %}
+            <div class="alert alert-danger mt-3">
+                {{ error }}
+            </div>
+        {% endif %}
+
+        {% if predictions %}
+            <div class="mt-4">
+                {{ predictions|safe }}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

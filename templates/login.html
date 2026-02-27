@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block content %}
+
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card shadow p-4">
+        <h3 class="text-center mb-4">Login to Enterprise AI</h3>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ 'danger' if category == 'danger' else 'success' }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="mb-3">
+                <label>Email</label>
+                <input type="email" name="email"
+                       class="form-control"
+                       placeholder="Enter your email" required>
+            </div>
+
+            <div class="mb-3">
+                <label>Password</label>
+                <input type="password" name="password"
+                       class="form-control"
+                       placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit"
+                    class="btn btn-success w-100">
+                Login
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="/register">Don't have an account? Register</a>
+        </div>
+
+        <div class="text-center mt-2">
+            <a href="/forgot">Forgot Password?</a>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
