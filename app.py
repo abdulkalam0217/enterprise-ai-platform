@@ -122,22 +122,22 @@ def login():
 
             # Try sending login notification email
             try:
-                msg = Message(
-                    subject="Login Alert - Enterprise AI",
-                    recipients=[user[2]]  # Correct email index
-                )
+#                 msg = Message(
+#                     subject="Login Alert - Enterprise AI",
+#                     recipients=[user[2]]  # Correct email index
+#                 )
 
-                msg.body = f"""
-Hello,
+#                 msg.body = f"""
+# Hello,
 
-You have successfully logged into Enterprise AI Platform.
+# You have successfully logged into Enterprise AI Platform.
 
-If this was not you, please reset your password immediately.
+# If this was not you, please reset your password immediately.
 
-Regards,
-Enterprise AI Team
-"""
-                mail.send(msg)
+# Regards,
+# Enterprise AI Team
+# """
+#                 mail.send(msg)
 
             except Exception as e:
                 print("Mail error:", e)  # Prevent login crash
