@@ -93,7 +93,6 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
-
 # ==============================
 # Login
 # ==============================
@@ -109,16 +108,26 @@ def login():
         user = cur.fetchone()
         cur.close()
 
+        # Table order:
+        # 0 = id
+        # 1 = username
+        # 2 = email
+        # 3 = password
+        # 4 = role
+
         if user and check_password_hash(user[3], password):
-            session["user"] = user[2]
-            session["role"] = user[4]
 
-            msg = Message(
-                subject="Login Alert - Enterprise AI",
-                recipients=[user[4]]
-            )
+            session["user"] = user[2]   # email
+            session["role"] = user[4]   # role
 
-            msg.body = f"""
+            # Try sending login notification email
+            try:
+                msg = Message(
+                    subject="Login Alert - Enterprise AI",
+                    recipients=[user[2]]  # Correct email index
+                )
+
+                msg.body = f"""
 Hello,
 
 You have successfully logged into Enterprise AI Platform.
@@ -128,7 +137,10 @@ If this was not you, please reset your password immediately.
 Regards,
 Enterprise AI Team
 """
-            mail.send(msg)
+                mail.send(msg)
+
+            except Exception as e:
+                print("Mail error:", e)  # Prevent login crash
 
             return redirect(url_for("dashboard"))
 
