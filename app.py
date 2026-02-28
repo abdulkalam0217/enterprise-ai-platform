@@ -140,6 +140,57 @@ def ai_prediction():
 
     return render_template("predict.html")
 
+
+@app.route("/train_model", methods=["GET", "POST"])
+def train_model():
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    import pandas as pd
+    import pickle
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.model_selection import train_test_split
+
+    if request.method == "POST":
+
+        # TRAIN MODEL
+        if "file" in request.files and request.files["file"].filename != "":
+            file = request.files["file"]
+
+            df = pd.read_csv(file)
+
+            X = df[["marks", "hours"]]
+            y = df["result"]
+
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+
+            model = LogisticRegression()
+            model.fit(X_train, y_train)
+
+            accuracy = model.score(X_test, y_test)
+
+            pickle.dump(model, open("model.pkl", "wb"))
+
+            return render_template("ai.html", accuracy=accuracy)
+
+        # PREDICT
+        if "marks" in request.form and "hours" in request.form:
+
+            marks = float(request.form["marks"])
+            hours = float(request.form["hours"])
+
+            model = pickle.load(open("model.pkl", "rb"))
+
+            prediction = model.predict([[marks, hours]])[0]
+
+            result = "Pass ✅" if prediction == 1 else "Fail ❌"
+
+            return render_template("ai.html", prediction=result)
+
+    return render_template("ai.html")
+
 # ================= RUN =================
 
 if __name__ == "__main__":
