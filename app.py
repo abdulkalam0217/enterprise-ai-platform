@@ -109,9 +109,9 @@ def login():
         user = cur.fetchone()
         cur.close()
 
-        if user and check_password_hash(user[2], password):
-            session["user"] = user[4]
-            session["role"] = user[3]
+        if user and check_password_hash(user[3], password):
+            session["user"] = user[2]
+            session["role"] = user[4]
 
             msg = Message(
                 subject="Login Alert - Enterprise AI",
