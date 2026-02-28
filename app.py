@@ -53,16 +53,15 @@ app.config['MAIL_DEFAULT_SENDER'] = 'aggu0217@gmail.com'
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
-def get_db_connection():
-    url = os.environ.get("MYSQL_URL")
-    parsed = urlparse(url)
 
+
+def get_db_connection():
     return MySQLdb.connect(
-        host=parsed.hostname,
-        user=parsed.username,
-        password=parsed.password,
-        database=parsed.path.lstrip('/'),
-        port=parsed.port
+        host=os.environ.get("MYSQLHOST"),
+        user=os.environ.get("MYSQLUSER"),
+        password=os.environ.get("MYSQLPASSWORD"),
+        database=os.environ.get("MYSQLDATABASE"),
+        port=int(os.environ.get("MYSQLPORT"))
     )
 
 # ==============================
