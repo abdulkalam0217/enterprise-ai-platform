@@ -1,21 +1,17 @@
 import os
 import urllib.parse as urlparse
 import pymysql
+import pandas as pd
+import pickle
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
 
-# ==============================
-# Flask Setup
-# ==============================
-
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
-# ==============================
-# Database Connection (Railway)
-# ==============================
+# ================= DATABASE =================
 
 DATABASE_URL = os.environ.get("MYSQL_URL")
 
@@ -31,9 +27,7 @@ conn = pymysql.connect(
     ssl={"ssl": {}}
 )
 
-# ==============================
-# Mail Configuration
-# ==============================
+# ================= MAIL =================
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -45,9 +39,11 @@ app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("MAIL_USERNAME")
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
-# ==============================
-# Routes
-# ==============================
+# ================= MODEL =================
+
+model = pickle.load(open("model.pkl", "rb"))
+
+# ================= ROUTES =================
 
 @app.route("/")
 def home():
@@ -103,76 +99,10 @@ def login():
 
     return render_template("login.html")
 
-@app.route("/forgot", methods=["GET", "POST"])
-def forgot_password():
-    if request.method == "POST":
-        email = request.form["email"]
-
-        cur = conn.cursor()
-        cur.execute("SELECT * FROM users WHERE email=%s", (email,))
-        user = cur.fetchone()
-        cur.close()
-
-        if user:
-            token = serializer.dumps(email, salt="password-reset-salt")
-            reset_link = url_for("reset_password", token=token, _external=True)
-
-            msg = Message(
-                subject="Password Reset",
-                recipients=[email]
-            )
-
-            msg.body = f"""
-Click the link below to reset your password:
-
-{reset_link}
-
-This link will expire in 10 minutes.
-"""
-            mail.send(msg)
-            flash("Reset link sent to your email!", "success")
-        else:
-            flash("Email not found!", "danger")
-
-    return render_template("forgot.html")
-
-@app.route("/reset/<token>", methods=["GET", "POST"])
-def reset_password(token):
-    try:
-        email = serializer.loads(token, salt="password-reset-salt", max_age=600)
-    except:
-        flash("Reset link expired or invalid.", "danger")
-        return redirect(url_for("login"))
-
-    if request.method == "POST":
-        new_password = generate_password_hash(request.form["password"])
-
-        cur = conn.cursor()
-        cur.execute("UPDATE users SET password=%s WHERE email=%s",
-                    (new_password, email))
-        conn.commit()
-        cur.close()
-
-        flash("Password updated successfully!", "success")
-        return redirect(url_for("login"))
-
-    return render_template("reset.html")
-
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
-
-    if session["role"] == "admin":
-        cur = conn.cursor()
-        cur.execute("SELECT id, username, role FROM users")
-        users = cur.fetchall()
-        cur.close()
-
-        return render_template("dashboard.html",
-                               user=session["user"],
-                               role=session["role"],
-                               users=users)
 
     return render_template("dashboard.html",
                            user=session["user"],
@@ -184,11 +114,33 @@ def logout():
     session.pop("role", None)
     return redirect(url_for("login"))
 
-@app.route("/predict")
+# ================= AI PREDICTION =================
+
+@app.route("/ai_prediction", methods=["GET", "POST"])
 def ai_prediction():
     if "user" not in session:
         return redirect(url_for("login"))
+
+    if request.method == "POST":
+        file = request.files.get("file")
+
+        if not file:
+            return render_template("predict.html", error="No file selected")
+
+        try:
+            df = pd.read_csv(file)
+            predictions = model.predict(df)
+            df["Prediction"] = predictions
+            result_table = df.to_html(classes="table table-bordered", index=False)
+
+            return render_template("predict.html", predictions=result_table)
+
+        except Exception as e:
+            return render_template("predict.html", error=str(e))
+
     return render_template("predict.html")
+
+# ================= RUN =================
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
