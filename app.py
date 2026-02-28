@@ -4,6 +4,8 @@ import os
 import pymysql
 pymysql.install_as_MySQLdb()
 import MySQLdb
+from urllib.parse import urlparse
+import MySQLdb
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -50,6 +52,18 @@ app.config['MAIL_DEFAULT_SENDER'] = 'aggu0217@gmail.com'
 
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
+
+def get_db_connection():
+    url = os.environ.get("MYSQL_URL")
+    parsed = urlparse(url)
+
+    return MySQLdb.connect(
+        host=parsed.hostname,
+        user=parsed.username,
+        password=parsed.password,
+        database=parsed.path.lstrip('/'),
+        port=parsed.port
+    )
 
 # ==============================
 # Home Route
@@ -103,7 +117,7 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        connection = MySQLdb.connect(os.environ.get("MYSQL_URL"))
+        connection = get_db_connection()
         cur = connection.cursor()
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
