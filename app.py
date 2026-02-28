@@ -1,14 +1,6 @@
-import pandas as pd
-import pickle
 import os
-import pymysql
-pymysql.install_as_MySQLdb()
+import urllib.parse as urlparse
 import MySQLdb
-from urllib.parse import urlparse
-import MySQLdb
-
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
@@ -19,14 +11,13 @@ from itsdangerous import URLSafeTimedSerializer
 # ==============================
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
 # ==============================
 # Database Connection (Railway)
 # ==============================
 
 DATABASE_URL = os.environ.get("MYSQL_URL")
-import urllib.parse as urlparse
 
 urlparse.uses_netloc.append("mysql")
 url = urlparse.urlparse(DATABASE_URL)
@@ -35,38 +26,23 @@ conn = MySQLdb.connect(
     host=url.hostname,
     user=url.username,
     passwd=url.password,
-    db=url.path[1:],   # removes the /
+    db=url.path[1:],
     port=url.port
 )
 
 # ==============================
-# Mail Configuration
+# Mail Configuration (SECURE)
 # ==============================
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'aggu0217@gmail.com'
-app.config['MAIL_PASSWORD'] = 'wihlqfuspqhjgsnr'
-app.config['MAIL_DEFAULT_SENDER'] = 'aggu0217@gmail.com'
+app.config['MAIL_USERNAME'] = os.environ.get("MAIL_USERNAME")
+app.config['MAIL_PASSWORD'] = os.environ.get("MAIL_PASSWORD")
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get("MAIL_USERNAME")
 
 mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
-
-
-
-import os
-import pymysql
-
-def get_db_connection():
-    connection = pymysql.connect(
-        host=os.environ.get("MYSQLHOST"),
-        user=os.environ.get("MYSQLUSER"),
-        password=os.environ.get("MYSQLPASSWORD"),
-        database=os.environ.get("MYSQLDATABASE"),
-        port=int(os.environ.get("MYSQLPORT", 3306))
-    )
-    return connection
 
 # ==============================
 # Home Route
@@ -110,6 +86,7 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
+
 # ==============================
 # Login
 # ==============================
@@ -120,12 +97,10 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        connection = get_db_connection()
-        cur = connection.cursor()
+        cur = conn.cursor()
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
         cur.close()
-        connection.close()
 
         if user and check_password_hash(user[3], password):
             session["user"] = user[2]
@@ -155,7 +130,7 @@ def forgot_password():
             reset_link = url_for("reset_password", token=token, _external=True)
 
             msg = Message(
-                subject="Password Reset - Enterprise AI",
+                subject="Password Reset",
                 recipients=[email]
             )
 
@@ -167,7 +142,6 @@ Click the link below to reset your password:
 This link will expire in 10 minutes.
 """
             mail.send(msg)
-
             flash("Reset link sent to your email!", "success")
         else:
             flash("Email not found!", "danger")
@@ -231,6 +205,7 @@ def dashboard():
 @app.route("/logout")
 def logout():
     session.pop("user", None)
+    session.pop("role", None)
     return redirect(url_for("login"))
 
 # ==============================
