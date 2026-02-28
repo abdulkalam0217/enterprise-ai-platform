@@ -58,8 +58,7 @@
     <h4 class="text-center mb-4">Enterprise AI</h4>
 
     <a href="/dashboard">🏠 Dashboard</a>
-    <a href="/predict">🤖 AI Prediction</a>
-
+    <a href="{{ url_for('ai_prediction') }}">AI Prediction</a>
     {% if session.get("role") == "admin" %}
         <a href="/dashboard">👥 Manage Users</a>
     {% endif %}
