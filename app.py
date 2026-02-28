@@ -184,5 +184,11 @@ def logout():
     session.pop("role", None)
     return redirect(url_for("login"))
 
+@app.route("/predict")
+def ai_prediction():
+    if "user" not in session:
+        return redirect(url_for("login"))
+    return render_template("predict.html")
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
