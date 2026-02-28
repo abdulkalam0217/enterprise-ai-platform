@@ -1,6 +1,6 @@
 import os
 import urllib.parse as urlparse
-import MySQLdb
+import pymysql
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
@@ -22,16 +22,17 @@ DATABASE_URL = os.environ.get("MYSQL_URL")
 urlparse.uses_netloc.append("mysql")
 url = urlparse.urlparse(DATABASE_URL)
 
-conn = MySQLdb.connect(
+conn = pymysql.connect(
     host=url.hostname,
     user=url.username,
-    passwd=url.password,
-    db=url.path[1:],
-    port=url.port
+    password=url.password,
+    database=url.path[1:],
+    port=url.port,
+    ssl={"ssl": {}}
 )
 
 # ==============================
-# Mail Configuration (SECURE)
+# Mail Configuration
 # ==============================
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
@@ -45,7 +46,7 @@ mail = Mail(app)
 serializer = URLSafeTimedSerializer(app.secret_key)
 
 # ==============================
-# Home Route
+# Routes
 # ==============================
 
 @app.route("/")
@@ -53,10 +54,6 @@ def home():
     if "user" not in session:
         return redirect(url_for("login"))
     return redirect(url_for("dashboard"))
-
-# ==============================
-# Register
-# ==============================
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -78,7 +75,6 @@ def register():
             "INSERT INTO users (username, email, password, role) VALUES (%s, %s, %s, %s)",
             (email.split("@")[0], email, password, role)
         )
-
         conn.commit()
         cur.close()
 
@@ -86,10 +82,6 @@ def register():
         return redirect(url_for("login"))
 
     return render_template("register.html")
-
-# ==============================
-# Login
-# ==============================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -110,10 +102,6 @@ def login():
             flash("Invalid email or password", "danger")
 
     return render_template("login.html")
-
-# ==============================
-# Forgot Password
-# ==============================
 
 @app.route("/forgot", methods=["GET", "POST"])
 def forgot_password():
@@ -148,10 +136,6 @@ This link will expire in 10 minutes.
 
     return render_template("forgot.html")
 
-# ==============================
-# Reset Password
-# ==============================
-
 @app.route("/reset/<token>", methods=["GET", "POST"])
 def reset_password(token):
     try:
@@ -174,10 +158,6 @@ def reset_password(token):
 
     return render_template("reset.html")
 
-# ==============================
-# Dashboard
-# ==============================
-
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
@@ -198,19 +178,11 @@ def dashboard():
                            user=session["user"],
                            role=session["role"])
 
-# ==============================
-# Logout
-# ==============================
-
 @app.route("/logout")
 def logout():
     session.pop("user", None)
     session.pop("role", None)
     return redirect(url_for("login"))
-
-# ==============================
-# Run App (Railway Ready)
-# ==============================
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
