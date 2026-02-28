@@ -103,47 +103,17 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        cur = conn.cursor()
+        connection = MySQLdb.connect(os.environ.get("MYSQL_URL"))
+        cur = connection.cursor()
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
         cur.close()
-
-        # Table order:
-        # 0 = id
-        # 1 = username
-        # 2 = email
-        # 3 = password
-        # 4 = role
+        connection.close()
 
         if user and check_password_hash(user[3], password):
-
-            session["user"] = user[2]   # email
-            session["role"] = user[4]   # role
-
-            # Try sending login notification email
-            try:
-#                 msg = Message(
-#                     subject="Login Alert - Enterprise AI",
-#                     recipients=[user[2]]  # Correct email index
-#                 )
-
-#                 msg.body = f"""
-# Hello,
-
-# You have successfully logged into Enterprise AI Platform.
-
-# If this was not you, please reset your password immediately.
-
-# Regards,
-# Enterprise AI Team
-# """
-#                 mail.send(msg)
-
-            except Exception as e:
-                print("Mail error:", e)  # Prevent login crash
-
+            session["user"] = user[2]
+            session["role"] = user[4]
             return redirect(url_for("dashboard"))
-
         else:
             flash("Invalid email or password", "danger")
 
