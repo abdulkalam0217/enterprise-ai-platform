@@ -59,6 +59,7 @@
 
     <a href="/dashboard">🏠 Dashboard</a>
     <a href="{{ url_for('ai_prediction') }}">AI Prediction</a>
+    <a href="{{ url_for('train_model') }}">AI Trainer</a>
     {% if session.get("role") == "admin" %}
         <a href="/dashboard">👥 Manage Users</a>
     {% endif %}
