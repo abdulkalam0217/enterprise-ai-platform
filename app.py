@@ -5,7 +5,7 @@ import pandas as pd
 import pickle
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mail import Mail
+from flask_mail import Mail,Message
 from itsdangerous import URLSafeTimedSerializer
 
 app = Flask(__name__)
@@ -127,26 +127,23 @@ def forgot_password():
             flash("Email not found!", "danger")
             return redirect(url_for("forgot_password"))
 
-        token = serializer.dumps(email, salt="reset-salt")
-        reset_link = url_for("reset_password", token=token, _external=True)
+        try:
+            token = serializer.dumps(email, salt="reset-salt")
+            reset_link = url_for("reset_password", token=token, _external=True)
 
-        from flask_mail import Message
+            msg = Message(
+                subject="Password Reset",
+                recipients=[email],
+                body=f"Click here to reset password:\n{reset_link}"
+            )
 
-        msg = Message(
-            subject="Password Reset",
-            recipients=[email]
-        )
-        msg.body = f"""
-Click the link below to reset your password:
+            mail.send(msg)
 
-{reset_link}
+            flash("Reset link sent to your email!", "success")
+            return redirect(url_for("login"))
 
-This link expires in 10 minutes.
-"""
-        mail.send(msg)
-
-        flash("Reset link sent to your email!", "success")
-        return redirect(url_for("login"))
+        except Exception as e:
+            return f"Mail Error: {str(e)}"
 
     return render_template("forgot.html")
 
