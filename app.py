@@ -111,6 +111,69 @@ def login():
 
     return render_template("login.html")
 
+@app.route("/forgot", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "POST":
+        email = request.form["email"]
+
+        connection = get_db_connection()
+        cur = connection.cursor()
+        cur.execute("SELECT * FROM users WHERE email=%s", (email,))
+        user = cur.fetchone()
+        cur.close()
+        connection.close()
+
+        if not user:
+            flash("Email not found!", "danger")
+            return redirect(url_for("forgot_password"))
+
+        token = serializer.dumps(email, salt="reset-salt")
+        reset_link = url_for("reset_password", token=token, _external=True)
+
+        from flask_mail import Message
+
+        msg = Message(
+            subject="Password Reset",
+            recipients=[email]
+        )
+        msg.body = f"""
+Click the link below to reset your password:
+
+{reset_link}
+
+This link expires in 10 minutes.
+"""
+        mail.send(msg)
+
+        flash("Reset link sent to your email!", "success")
+        return redirect(url_for("login"))
+
+    return render_template("forgot.html")
+
+@app.route("/reset/<token>", methods=["GET", "POST"])
+def reset_password(token):
+    try:
+        email = serializer.loads(token, salt="reset-salt", max_age=600)
+    except:
+        flash("Reset link expired or invalid", "danger")
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        new_password = generate_password_hash(request.form["password"])
+
+        connection = get_db_connection()
+        cur = connection.cursor()
+        cur.execute("UPDATE users SET password=%s WHERE email=%s",
+                    (new_password, email))
+        connection.commit()
+        cur.close()
+        connection.close()
+
+        flash("Password updated successfully!", "success")
+        return redirect(url_for("login"))
+
+    return render_template("reset.html")
+
 @app.route("/dashboard")
 def dashboard():
     if "user" not in session:
