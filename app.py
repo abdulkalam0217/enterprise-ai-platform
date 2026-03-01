@@ -134,7 +134,7 @@ def forgot_password():
             msg = Message(
                 subject="Password Reset",
                 recipients=[email],
-                body=f"Click here to reset password:\n{reset_link}"
+                body=f"Click this link to reset password:\n{reset_link}"
             )
 
             mail.send(msg)
