@@ -95,22 +95,41 @@ def login():
 
         connection = get_db_connection()
         cur = connection.cursor()
-
         cur.execute("SELECT * FROM users WHERE email=%s", (email,))
         user = cur.fetchone()
-
         cur.close()
         connection.close()
 
         if user and check_password_hash(user[3], password):
             session["user"] = user[2]
             session["role"] = user[4]
+
+            # ✅ SEND LOGIN EMAIL (SAFE)
+            try:
+                msg = Message(
+                    subject="Login Alert - Enterprise AI",
+                    recipients=[email],
+                    body=f"""
+Hello,
+
+You have successfully logged into Enterprise AI.
+
+If this was not you, please reset your password immediately.
+
+Thank you,
+Enterprise AI Team
+"""
+                )
+                mail.send(msg)
+            except:
+                # Do nothing if mail fails (prevents crash)
+                pass
+
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password", "danger")
 
     return render_template("login.html")
-
 @app.route("/forgot", methods=["GET", "POST"])
 def forgot_password():
     if request.method == "POST":
