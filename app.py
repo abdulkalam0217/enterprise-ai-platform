@@ -127,23 +127,13 @@ def forgot_password():
             flash("Email not found!", "danger")
             return redirect(url_for("forgot_password"))
 
-        try:
-            token = serializer.dumps(email, salt="reset-salt")
-            reset_link = url_for("reset_password", token=token, _external=True)
+        token = serializer.dumps(email, salt="reset-salt")
+        reset_link = url_for("reset_password", token=token, _external=True)
 
-            msg = Message(
-                subject="Password Reset",
-                recipients=[email],
-                body=f"Click this link to reset password:\n{reset_link}"
-            )
-
-            mail.send(msg)
-
-            flash("Reset link sent to your email!", "success")
-            return redirect(url_for("login"))
-
-        except Exception as e:
-            return f"Mail Error: {str(e)}"
+        return f"""
+        <h3>Copy this link and open it:</h3>
+        <a href="{reset_link}">{reset_link}</a>
+        """
 
     return render_template("forgot.html")
 
