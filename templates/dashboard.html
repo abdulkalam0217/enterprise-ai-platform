@@ -2,128 +2,146 @@
 
 {% block content %}
 
-<h2 class="mb-4">Dashboard</h2>
+<h2 class="mb-4 fw-bold">Dashboard</h2>
 
-<div class="row">
+<div class="row g-4">
 
     <!-- Welcome Card -->
     <div class="col-md-3">
-        <div class="card p-4 shadow-sm">
-            <h5>Welcome</h5>
-            <h4>Hello, {{ user }} 👋</h4>
-            <p>Manage and train your AI models easily.</p>
+        <div class="card p-4 text-white" style="background: linear-gradient(135deg, #10b981, #059669);">
+            <h6 class="text-light">Welcome</h6>
+            <h4 class="fw-bold">Hello, {{ user }}</h4>
+            <small>Manage and train your AI models easily.</small>
         </div>
     </div>
 
     <!-- Model Status -->
     <div class="col-md-3">
-        <div class="card p-4 shadow-sm">
-            <h5>AI Model Status</h5>
+        <div class="card p-4 text-white" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
+            <h6 class="text-light">AI Model Status</h6>
             {% if model_status %}
-                <h3 class="text-success">Trained ✅</h3>
+                <h3 class="fw-bold">Trained ✅</h3>
             {% else %}
-                <h3 class="text-danger">Not Trained ❌</h3>
+                <h3 class="fw-bold">Not Trained ❌</h3>
             {% endif %}
         </div>
     </div>
 
     <!-- Total Predictions -->
     <div class="col-md-3">
-        <div class="card p-4 shadow-sm">
-            <h5>Total Predictions</h5>
-            <h2>{{ total_predictions }}</h2>
+        <div class="card p-4 text-white" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">
+            <h6 class="text-light">Total Predictions</h6>
+            <h2 class="fw-bold">{{ total_predictions }}</h2>
         </div>
     </div>
 
     <!-- Total Users (Admin Only) -->
     {% if role == "admin" %}
     <div class="col-md-3">
-        <div class="card p-4 shadow-sm">
-            <h5>Total Users</h5>
-            <h2>{{ users|length }}</h2>
+        <div class="card p-4 text-white" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+            <h6 class="text-light">Total Users</h6>
+            <h2 class="fw-bold">{{ users|length }}</h2>
         </div>
     </div>
     {% endif %}
 
 </div>
 
-<!-- Prediction History (OUTSIDE row) -->
+<!-- Prediction History -->
 <hr class="my-5">
 
-<h4>Your Prediction History</h4>
+<h4 class="fw-bold mb-3">Your Prediction History</h4>
 
-<table class="table table-bordered bg-white shadow-sm">
-    <thead class="table-dark">
-        <tr>
-            <th>Prediction</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for p in user_predictions %}
-        <tr>
-            <td>{{ p[0] }}</td>
-            <td>{{ p[1] }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Prediction</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in user_predictions %}
+                <tr>
+                    <td>{{ p[0] }}</td>
+                    <td>{{ p[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
 {% if role == "admin" %}
 <hr class="my-5">
 
-<h4>All Users</h4>
-<table class="table table-bordered bg-white shadow-sm">
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Role</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for u in users %}
-        <tr>
-            <td>{{ u[0] }}</td>
-            <td>{{ u[1] }}</td>
-            <td>{{ u[2] }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endif %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<h4 class="fw-bold mb-3">All Users</h4>
 
+<div class="card p-3">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u[0] }}</td>
+                    <td>{{ u[1] }}</td>
+                    <td>{{ u[2] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Chart Section -->
 <hr class="my-5">
 
-<h4>Prediction Trend</h4>
+<h4 class="fw-bold mb-3">Prediction Trend</h4>
 
-<canvas id="predictionChart" height="100"></canvas>
+<div class="card p-4">
+    <canvas id="predictionChart" height="100"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-    const ctx = document.getElementById('predictionChart').getContext('2d');
+const ctx = document.getElementById('predictionChart').getContext('2d');
 
-    const predictionChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: {{ dates | tojson }},
-            datasets: [{
-                label: 'Predictions per Day',
-                data: {{ counts | tojson }},
-                borderWidth: 2,
-                tension: 0.3
-            }]
-        },
-        options: {
-            scales: {
-                y: {
-                    beginAtZero: true,
+const predictionChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ dates | tojson }},
+        datasets: [{
+            label: 'Predictions per Day',
+            data: {{ counts | tojson }},
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
                     stepSize: 1
                 }
             }
         }
-
-    });
+    }
+});
 </script>
 
 {% endblock %}
