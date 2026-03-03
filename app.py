@@ -171,6 +171,13 @@ def dashboard():
         "SELECT prediction, created_at FROM predictions WHERE user_email=%s ORDER BY created_at DESC",
         (session["user"],)
    )
+    cur.execute(
+        "SELECT DATE(created_at), COUNT(*) FROM predictions WHERE user_email=%s GROUP BY DATE(created_at)",
+     (session["user"],)
+    )
+    dates = [str(row[0]) for row in prediction_chart_data]
+    counts = [row[1] for row in prediction_chart_data]
+    prediction_chart_data = cur.fetchall()
     user_predictions = cur.fetchall()
     cur.close()
     connection.close()
@@ -184,7 +191,9 @@ def dashboard():
         users=users,
         model_status=model_exists,
         total_predictions=total_predictions,
-        user_predictions=user_predictions
+        user_predictions=user_predictions,
+        dates=dates,
+        counts=counts
     )
 @app.route("/logout")
 def logout():
