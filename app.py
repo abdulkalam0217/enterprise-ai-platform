@@ -37,7 +37,7 @@ def send_login_email(user_email):
     try:
         message = Mail(
             from_email='aggu0217@gmail.com',  # verified sender
-            to_emails=user_email,
+            to_emails='abdulkalam0217@gmail',
             subject='Login Alert - Enterprise AI',
             plain_text_content='You have successfully logged into Enterprise AI.'
         )
