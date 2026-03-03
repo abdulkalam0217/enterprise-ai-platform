@@ -47,6 +47,28 @@
 
 </div>
 
+<!-- Prediction History (OUTSIDE row) -->
+<hr class="my-5">
+
+<h4>Your Prediction History</h4>
+
+<table class="table table-bordered bg-white shadow-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Prediction</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in user_predictions %}
+        <tr>
+            <td>{{ p[0] }}</td>
+            <td>{{ p[1] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
 {% if role == "admin" %}
 <hr class="my-5">
 
