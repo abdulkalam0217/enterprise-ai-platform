@@ -6,8 +6,6 @@ import pickle
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
@@ -30,23 +28,6 @@ def get_db_connection():
     )
 
 serializer = URLSafeTimedSerializer(app.secret_key)
-
-# ================= SENDGRID EMAIL =================
-
-def send_login_email(user_email):
-    try:
-        message = Mail(
-            from_email='aggu0217@gmail.com',  # verified sender
-            to_emails='abdulkalam0217@gmail',
-            subject='Login Alert - Enterprise AI',
-            plain_text_content='You have successfully logged into Enterprise AI.'
-        )
-
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-        sg.send(message)
-
-    except Exception as e:
-        print("SendGrid Error:", e)
 
 # ================= MODEL LOAD =================
 
@@ -113,10 +94,6 @@ def login():
         if user and check_password_hash(user[3], password):
             session["user"] = user[2]
             session["role"] = user[4]
-
-            # ✅ SEND EMAIL AFTER LOGIN
-            send_login_email(email)
-
             return redirect(url_for("dashboard"))
         else:
             flash("Invalid email or password", "danger")
