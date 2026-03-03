@@ -246,15 +246,35 @@ def ai_prediction():
         if not model:
             return render_template("predict.html", error="Train model first")
 
-        df = pd.read_csv(file)
-        predictions = model.predict(df)
-        df["Prediction"] = predictions
+        try:
+            df = pd.read_csv(file)
 
-        return render_template("predict.html",
-                               predictions=df.to_html(classes="table table-bordered", index=False))
+            expected_features = list(model.feature_names_in_)
+
+            # Check missing required columns
+            missing_cols = [col for col in expected_features if col not in df.columns]
+            if missing_cols:
+                return render_template(
+                    "predict.html",
+                    error=f"Missing required columns: {missing_cols}"
+                )
+
+            # Keep only required columns and reorder properly
+            df_features = df[expected_features]
+
+            predictions = model.predict(df_features)
+
+            df["Prediction"] = predictions
+
+            return render_template(
+                "predict.html",
+                predictions=df.to_html(classes="table table-bordered", index=False)
+            )
+
+        except Exception as e:
+            return render_template("predict.html", error=f"Invalid file format: {str(e)}")
 
     return render_template("predict.html")
-
 # ---------- AI TRAIN + MANUAL PREDICT ----------
 
 @app.route("/train_model", methods=["GET", "POST"])
@@ -263,55 +283,54 @@ def train_model():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+        file = request.files.get("file")
 
-        if "file" in request.files and request.files["file"].filename != "":
-            file = request.files["file"]
+        if not file:
+            return render_template("train.html", error="No file selected")
+
+        try:
             df = pd.read_csv(file)
 
-            X = df[["marks", "hours"]]
-            y = df["result"]
+            # REQUIRED TARGET COLUMN
+            target_column = "result"
 
-            from sklearn.model_selection import train_test_split
+            if target_column not in df.columns:
+                return render_template(
+                    "train.html",
+                    error=f"Training file must contain target column '{target_column}'"
+                )
+
+            # Separate features and target
+            X = df.drop(columns=[target_column])
+            y = df[target_column]
+
+            if X.shape[1] == 0:
+                return render_template(
+                    "train.html",
+                    error="No feature columns found"
+                )
+
+            # Train model
             from sklearn.linear_model import LogisticRegression
-
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42
-            )
-
             model = LogisticRegression()
-            model.fit(X_train, y_train)
-            accuracy = model.score(X_test, y_test)
 
-            pickle.dump(model, open("model.pkl", "wb"))
+            model.fit(X, y)
 
-            return render_template("ai.html", accuracy=accuracy)
+            save_model(model)
 
-        if "marks" in request.form and "hours" in request.form:
-            model = load_model()
-            if not model:
-                return render_template("ai.html", error="Train model first")
-
-            marks = float(request.form["marks"])
-            hours = float(request.form["hours"])
-
-            prediction = model.predict([[marks, hours]])[0]
-            result = "Pass ✅" if prediction == 1 else "Fail ❌"
-            connection = get_db_connection()
-            cur = connection.cursor()
-
-            cur.execute(
-                "INSERT INTO predictions (user_email, prediction) VALUES (%s, %s)",
-                (session["user"], result)
+            return render_template(
+                "train.html",
+                success="Model trained successfully!",
+                columns=list(X.columns)
             )
 
-            connection.commit()
-            cur.close()
-            connection.close()
+        except Exception as e:
+            return render_template(
+                "train.html",
+                error=f"Invalid file format: {str(e)}"
+            )
 
-            return render_template("ai.html", prediction=result)
-
-    return render_template("ai.html")
-
+    return render_template("train.html")
 # ================= RUN =================
 
 if __name__ == "__main__":
