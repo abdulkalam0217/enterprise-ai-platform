@@ -163,22 +163,37 @@ def dashboard():
 
     connection = get_db_connection()
     cur = connection.cursor()
+
+    # Get all users
     cur.execute("SELECT id, email, role FROM users")
     users = cur.fetchall()
+
+    # Total predictions count
     cur.execute("SELECT COUNT(*) FROM predictions")
     total_predictions = cur.fetchone()[0]
+
+    # User prediction history
     cur.execute(
         "SELECT prediction, created_at FROM predictions WHERE user_email=%s ORDER BY created_at DESC",
         (session["user"],)
-   )
+    )
+    user_predictions = cur.fetchall()
+
+    # Chart data
     cur.execute(
         "SELECT DATE(created_at), COUNT(*) FROM predictions WHERE user_email=%s GROUP BY DATE(created_at)",
-     (session["user"],)
+        (session["user"],)
     )
-    dates = [str(row[0]) for row in prediction_chart_data]
-    counts = [row[1] for row in prediction_chart_data]
     prediction_chart_data = cur.fetchall()
-    user_predictions = cur.fetchall()
+
+    # Default empty lists (prevents crash)
+    dates = []
+    counts = []
+
+    if prediction_chart_data:
+        dates = [str(row[0]) for row in prediction_chart_data]
+        counts = [row[1] for row in prediction_chart_data]
+
     cur.close()
     connection.close()
 
