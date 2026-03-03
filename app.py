@@ -165,6 +165,8 @@ def dashboard():
     cur = connection.cursor()
     cur.execute("SELECT id, email, role FROM users")
     users = cur.fetchall()
+    cur.execute("SELECT COUNT(*) FROM predictions")
+    total_predictions = cur.fetchone()[0]
     cur.close()
     connection.close()
 
@@ -175,7 +177,8 @@ def dashboard():
         user=session["user"],
         role=session["role"],
         users=users,
-        model_status=model_exists
+        model_status=model_exists,
+        total_predictions=total_predictions
     )
 @app.route("/logout")
 def logout():

@@ -7,7 +7,7 @@
 <div class="row">
 
     <!-- Welcome Card -->
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-4 shadow-sm">
             <h5>Welcome</h5>
             <h4>Hello, {{ user }} 👋</h4>
@@ -16,7 +16,7 @@
     </div>
 
     <!-- Model Status -->
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-4 shadow-sm">
             <h5>AI Model Status</h5>
             {% if model_status %}
@@ -27,9 +27,17 @@
         </div>
     </div>
 
+    <!-- Total Predictions -->
+    <div class="col-md-3">
+        <div class="card p-4 shadow-sm">
+            <h5>Total Predictions</h5>
+            <h2>{{ total_predictions }}</h2>
+        </div>
+    </div>
+
     <!-- Total Users (Admin Only) -->
     {% if role == "admin" %}
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card p-4 shadow-sm">
             <h5>Total Users</h5>
             <h2>{{ users|length }}</h2>
