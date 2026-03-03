@@ -6,7 +6,8 @@ import pickle
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer
-from twilio.rest import Client
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "secret123")
@@ -30,23 +31,22 @@ def get_db_connection():
 
 serializer = URLSafeTimedSerializer(app.secret_key)
 
-# ================= TWILIO =================
+# ================= SENDGRID EMAIL =================
 
-def send_sms(to_number):
+def send_login_email(user_email):
     try:
-        client = Client(
-            os.environ.get("TWILIO_ACCOUNT_SID"),
-            os.environ.get("TWILIO_AUTH_TOKEN")
+        message = Mail(
+            from_email='aggu0217@gmail.com',  # verified sender
+            to_emails=user_email,
+            subject='Login Alert - Enterprise AI',
+            plain_text_content='You have successfully logged into Enterprise AI.'
         )
 
-        client.messages.create(
-            body="You have successfully logged into Enterprise AI.",
-            from_=os.environ.get("TWILIO_PHONE_NUMBER"),
-            to=to_number
-        )
+        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg.send(message)
 
     except Exception as e:
-        print("Twilio Error:", e)
+        print("SendGrid Error:", e)
 
 # ================= MODEL LOAD =================
 
@@ -114,8 +114,8 @@ def login():
             session["user"] = user[2]
             session["role"] = user[4]
 
-            # 🔥 SEND SMS AFTER LOGIN
-            send_sms("+917013474425")  # change to your verified number
+            # ✅ SEND EMAIL AFTER LOGIN
+            send_login_email(email)
 
             return redirect(url_for("dashboard"))
         else:
@@ -229,7 +229,6 @@ def train_model():
 
     if request.method == "POST":
 
-        # TRAIN
         if "file" in request.files and request.files["file"].filename != "":
             file = request.files["file"]
             df = pd.read_csv(file)
@@ -252,7 +251,6 @@ def train_model():
 
             return render_template("ai.html", accuracy=accuracy)
 
-        # MANUAL PREDICT
         if "marks" in request.form and "hours" in request.form:
             model = load_model()
             if not model:
