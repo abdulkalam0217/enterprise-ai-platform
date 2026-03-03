@@ -286,17 +286,17 @@ def train_model():
         file = request.files.get("file")
 
         if not file:
-            return render_template("train.html", error="No file selected")
+            return render_template("ai.html", error="No file selected")
 
         try:
             df = pd.read_csv(file)
 
-            # REQUIRED TARGET COLUMN
+            # Required target column
             target_column = "result"
 
             if target_column not in df.columns:
                 return render_template(
-                    "train.html",
+                    "ai.html",
                     error=f"Training file must contain target column '{target_column}'"
                 )
 
@@ -306,31 +306,42 @@ def train_model():
 
             if X.shape[1] == 0:
                 return render_template(
-                    "train.html",
+                    "ai.html",
                     error="No feature columns found"
                 )
 
-            # Train model
             from sklearn.linear_model import LogisticRegression
-            model = LogisticRegression()
+            from sklearn.model_selection import train_test_split
+            from sklearn.metrics import accuracy_score
 
-            model.fit(X, y)
+            # Split data
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+
+            model = LogisticRegression(max_iter=1000)
+            model.fit(X_train, y_train)
+
+            # Accuracy
+            y_pred = model.predict(X_test)
+            accuracy = accuracy_score(y_test, y_pred)
 
             save_model(model)
 
             return render_template(
-                "train.html",
+                "ai.html",
                 success="Model trained successfully!",
+                accuracy=round(accuracy * 100, 2),
                 columns=list(X.columns)
             )
 
         except Exception as e:
             return render_template(
-                "train.html",
+                "ai.html",
                 error=f"Invalid file format: {str(e)}"
             )
 
-    return render_template("train.html")
+    return render_template("ai.html")
 # ================= RUN =================
 
 if __name__ == "__main__":
