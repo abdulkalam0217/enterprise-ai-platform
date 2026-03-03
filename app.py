@@ -172,21 +172,34 @@ def dashboard():
     cur.execute("SELECT COUNT(*) FROM predictions")
     total_predictions = cur.fetchone()[0]
 
-    # User prediction history
+    # User prediction history (UTC → IST)
     cur.execute(
-        "SELECT prediction, created_at FROM predictions WHERE user_email=%s ORDER BY created_at DESC",
+        """
+        SELECT prediction,
+               CONVERT_TZ(created_at, '+00:00', '+05:30')
+        FROM predictions
+        WHERE user_email=%s
+        ORDER BY created_at DESC
+        """,
         (session["user"],)
     )
     user_predictions = cur.fetchall()
 
-    # Chart data
+    # Chart data (grouped by IST date)
     cur.execute(
-        "SELECT DATE(created_at), COUNT(*) FROM predictions WHERE user_email=%s GROUP BY DATE(created_at)",
+        """
+        SELECT DATE(CONVERT_TZ(created_at, '+00:00', '+05:30')),
+               COUNT(*)
+        FROM predictions
+        WHERE user_email=%s
+        GROUP BY DATE(CONVERT_TZ(created_at, '+00:00', '+05:30'))
+        ORDER BY DATE(CONVERT_TZ(created_at, '+00:00', '+05:30'))
+        """,
         (session["user"],)
     )
     prediction_chart_data = cur.fetchall()
 
-    # Default empty lists (prevents crash)
+    # Prevent crash if empty
     dates = []
     counts = []
 
