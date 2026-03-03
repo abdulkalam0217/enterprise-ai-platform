@@ -92,5 +92,29 @@
     </tbody>
 </table>
 {% endif %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<hr class="my-5">
+
+<h4>Prediction Trend</h4>
+
+<canvas id="predictionChart" height="100"></canvas>
+
+<script>
+    const ctx = document.getElementById('predictionChart').getContext('2d');
+
+    const predictionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: {{ dates | tojson }},
+            datasets: [{
+                label: 'Predictions per Day',
+                data: {{ counts | tojson }},
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        }
+    });
+</script>
 
 {% endblock %}
