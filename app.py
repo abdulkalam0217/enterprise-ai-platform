@@ -31,10 +31,19 @@ serializer = URLSafeTimedSerializer(app.secret_key)
 
 # ================= MODEL LOAD =================
 
+
+# Save trained model
+def save_model(model):
+    with open("model.pkl", "wb") as f:
+        pickle.dump(model, f)
+
+# Load trained model
 def load_model():
-    if os.path.exists("model.pkl"):
-        return pickle.load(open("model.pkl", "rb"))
-    return None
+    try:
+        with open("model.pkl", "rb") as f:
+            return pickle.load(f)
+    except:
+        return None
 
 # ================= ROUTES =================
 
