@@ -250,6 +250,17 @@ def train_model():
 
             prediction = model.predict([[marks, hours]])[0]
             result = "Pass ✅" if prediction == 1 else "Fail ❌"
+            connection = get_db_connection()
+            cur = connection.cursor()
+
+            cur.execute(
+                "INSERT INTO predictions (user_email, prediction) VALUES (%s, %s)",
+                (session["user"], result)
+            )
+
+            connection.commit()
+            cur.close()
+            connection.close()
 
             return render_template("ai.html", prediction=result)
 
