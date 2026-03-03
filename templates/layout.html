@@ -17,7 +17,6 @@
             background: #f8fafc;
         }
 
-        /* Sidebar */
         .sidebar {
             height: 100vh;
             background: #0f172a;
@@ -49,13 +48,11 @@
             padding-left: 18px;
         }
 
-        /* Main content when logged in */
         .main-content {
             margin-left: 250px;
             padding: 40px;
         }
 
-        /* Navbar */
         .navbar-custom {
             background: white;
             padding: 20px 30px;
@@ -64,18 +61,12 @@
             margin-bottom: 30px;
         }
 
-        /* Cards */
         .card {
             border: none;
             border-radius: 14px;
             box-shadow: 0px 4px 20px rgba(0,0,0,0.05);
         }
 
-        h2, h4, h5 {
-            font-weight: 600;
-        }
-
-        /* Responsive */
         @media(max-width: 768px) {
             .sidebar {
                 position: relative;
@@ -92,7 +83,6 @@
 <body>
 
 {% if session.get('user') %}
-<!-- Sidebar -->
 <div class="sidebar">
     <h4>🚀 Enterprise AI</h4>
 
@@ -106,30 +96,25 @@
 </div>
 {% endif %}
 
-{% if session.get('user') %}
-    <!-- Logged In Layout -->
-    <div class="main-content">
+<div class="{% if session.get('user') %}main-content{% else %}container d-flex justify-content-center align-items-center{% endif %}"
+     style="{% if not session.get('user') %}min-height:100vh;{% endif %}">
 
-        <div class="navbar-custom d-flex justify-content-between align-items-center">
-            <div>
-                <h5 class="mb-0">Enterprise AI Dashboard</h5>
-            </div>
-            <div>
-                <span class="text-muted small">
-                    Logged in as <strong>{{ session['user'] }}</strong>
-                </span>
-            </div>
+    {% if session.get('user') %}
+    <div class="navbar-custom d-flex justify-content-between align-items-center">
+        <div>
+            <h5 class="mb-0">Enterprise AI Dashboard</h5>
         </div>
-
-        {% block content %}{% endblock %}
-
+        <div>
+            <span class="text-muted small">
+                Logged in as <strong>{{ session['user'] }}</strong>
+            </span>
+        </div>
     </div>
-{% else %}
-    <!-- Login / Register Layout -->
-    <div class="container d-flex justify-content-center align-items-center" style="min-height:100vh;">
-        {% block content %}{% endblock %}
-    </div>
-{% endif %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+
+</div>
 
 </body>
 </html>
