@@ -161,10 +161,22 @@ def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    return render_template("dashboard.html",
-                           user=session["user"],
-                           role=session["role"])
+    connection = get_db_connection()
+    cur = connection.cursor()
+    cur.execute("SELECT id, email, role FROM users")
+    users = cur.fetchall()
+    cur.close()
+    connection.close()
 
+    model_exists = os.path.exists("model.pkl")
+
+    return render_template(
+        "dashboard.html",
+        user=session["user"],
+        role=session["role"],
+        users=users,
+        model_status=model_exists
+    )
 @app.route("/logout")
 def logout():
     session.clear()
