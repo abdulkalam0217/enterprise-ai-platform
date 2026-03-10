@@ -321,49 +321,41 @@ def train_model():
 @app.route("/train_model_select", methods=["POST"])
 def train_model_select():
 
-    if "user" not in session:
-        return redirect(url_for("login"))
-
     if "dataset" not in session:
         return render_template("ai.html", error="Upload dataset first")
 
-    try:
-        df = pd.read_json(session["dataset"])
+    # Load dataframe from session JSON
+    df = pd.read_json(session["dataset"])
 
-        target_column = request.form.get("target_column")
+    target_column = request.form.get("target_column")
 
-        if target_column not in df.columns:
-            return render_template("ai.html", error="Invalid target column")
+    if target_column not in df.columns:
+        return render_template("ai.html", error="Invalid target column")
 
-        X = df.drop(columns=[target_column])
-        y = df[target_column]
+    X = df.drop(columns=[target_column])
+    y = df[target_column]
 
-        from sklearn.model_selection import train_test_split
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.metrics import accuracy_score
+    from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.metrics import accuracy_score
 
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42
+    )
 
-        model = LogisticRegression(max_iter=1000)
-        model.fit(X_train, y_train)
+    model = LogisticRegression(max_iter=1000)
+    model.fit(X_train, y_train)
 
-        y_pred = model.predict(X_test)
+    y_pred = model.predict(X_test)
+    accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
 
-        accuracy = accuracy_score(y_test, y_pred)
-        accuracy = round(accuracy * 100, 2)
+    save_model(model)
 
-        save_model(model)
-
-        return render_template(
-            "ai.html",
-            success="Model trained successfully",
-            accuracy=accuracy
-        )
-
-    except Exception as e:
-        return render_template("ai.html", error=str(e))
+    return render_template(
+        "ai.html",
+        success="Model trained successfully!",
+        accuracy=accuracy
+    )
 # ================= RUN =================
 
 if __name__ == "__main__":
