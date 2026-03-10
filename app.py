@@ -12,11 +12,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "secret123")
 
 # ================= DATABASE =================
 
-@app.route("/")
-def home():
-    if "user" in session:
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("login"))
+
 
 def get_db_connection():
     DATABASE_URL = os.environ.get("MYSQL_URL")
