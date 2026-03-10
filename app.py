@@ -294,19 +294,19 @@ def train_model():
         return redirect(url_for("login"))
 
     if request.method == "POST":
-
         file = request.files.get("file")
 
         if not file:
             return render_template("ai.html", error="No file selected")
 
+        # save uploaded file temporarily
+        filepath = "dataset.csv"
+        file.save(filepath)
+
         try:
-            df = pd.read_csv(file)
+            df = pd.read_csv(filepath)
 
             columns = list(df.columns)
-
-            # Store dataframe temporarily in session
-            session["dataset"] = df.to_json()
 
             return render_template(
                 "ai.html",
@@ -321,11 +321,15 @@ def train_model():
 @app.route("/train_model_select", methods=["POST"])
 def train_model_select():
 
-    if "dataset" not in session:
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    filepath = "dataset.csv"
+
+    if not os.path.exists(filepath):
         return render_template("ai.html", error="Upload dataset first")
 
-    # Load dataframe from session JSON
-    df = pd.read_json(session["dataset"])
+    df = pd.read_csv(filepath)
 
     target_column = request.form.get("target_column")
 

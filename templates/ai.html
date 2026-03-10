@@ -36,25 +36,23 @@
 
 <div class="card p-4 shadow mt-4">
 
-    <h4>Select Target Column</h4>
+<h4>Select Target Column</h4>
 
-    <form method="POST" action="/train_model_select">
+<form method="POST" action="/train_model_select">
 
-        <div class="mb-3">
+<div class="mb-3">
+<select class="form-control" name="target_column" required>
 
-            <select class="form-control" name="target_column" required>
+{% for col in columns %}
+<option value="{{ col }}">{{ col }}</option>
+{% endfor %}
 
-                {% for col in columns %}
-                    <option value="{{ col }}">{{ col }}</option>
-                {% endfor %}
+</select>
+</div>
 
-            </select>
+<button class="btn btn-success">Train Model</button>
 
-        </div>
-
-        <button class="btn btn-success">Train Model</button>
-
-    </form>
+</form>
 
 </div>
 
