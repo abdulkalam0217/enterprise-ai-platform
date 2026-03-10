@@ -7,13 +7,19 @@
 <div class="card p-4 shadow">
     <h2 class="mb-3">AI Model Trainer</h2>
 
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" action="/train_model" enctype="multipart/form-data">
         <div class="mb-3">
             <input type="file" class="form-control" name="file" required>
         </div>
 
-        <button class="btn btn-primary">Upload Dataset</button>
+        <button class="btn btn-primary">Train Model</button>
     </form>
+
+    {% if success %}
+        <div class="alert alert-success mt-3">
+            {{ success }}
+        </div>
+    {% endif %}
 
     {% if accuracy %}
         <div class="alert alert-success mt-3">
@@ -30,42 +36,13 @@
 </div>
 
 
-<!-- ================= TARGET COLUMN SELECTION ================= -->
-
-{% if columns %}
-
-<div class="card p-4 shadow mt-4">
-
-<h4>Select Target Column</h4>
-
-<form method="POST" action="/train_model_select">
-
-<div class="mb-3">
-<select class="form-control" name="target_column" required>
-
-{% for col in columns %}
-<option value="{{ col }}">{{ col }}</option>
-{% endfor %}
-
-</select>
-</div>
-
-<button class="btn btn-success">Train Model</button>
-
-</form>
-
-</div>
-
-{% endif %}
-
-
 <!-- ================= MANUAL PREDICTION ================= -->
 
 <div class="card p-4 shadow mt-4">
 
     <h3>Predict Result</h3>
 
-    <form method="POST">
+    <form method="POST" action="/ai_prediction">
 
         <div class="row">
 

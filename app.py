@@ -294,23 +294,40 @@ def train_model():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+
         file = request.files.get("file")
 
         if not file:
             return render_template("ai.html", error="No file selected")
 
-        # save uploaded file temporarily
-        filepath = "dataset.csv"
-        file.save(filepath)
-
         try:
-            df = pd.read_csv(filepath)
+            df = pd.read_csv(file)
 
-            columns = list(df.columns)
+            # Features and target
+            X = df[["hours", "marks"]]
+            y = df["result"]
+
+            from sklearn.model_selection import train_test_split
+            from sklearn.linear_model import LogisticRegression
+            from sklearn.metrics import accuracy_score
+
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=0.2, random_state=42
+            )
+
+            model = LogisticRegression(max_iter=1000)
+            model.fit(X_train, y_train)
+
+            y_pred = model.predict(X_test)
+
+            accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
+
+            save_model(model)
 
             return render_template(
                 "ai.html",
-                columns=columns
+                success="Model trained successfully!",
+                accuracy=accuracy
             )
 
         except Exception as e:
@@ -318,48 +335,7 @@ def train_model():
 
     return render_template("ai.html")
 
-@app.route("/train_model_select", methods=["POST"])
-def train_model_select():
 
-    if "user" not in session:
-        return redirect(url_for("login"))
-
-    filepath = "dataset.csv"
-
-    if not os.path.exists(filepath):
-        return render_template("ai.html", error="Upload dataset first")
-
-    df = pd.read_csv(filepath)
-
-    target_column = request.form.get("target_column")
-
-    if target_column not in df.columns:
-        return render_template("ai.html", error="Invalid target column")
-
-    X = df.drop(columns=[target_column])
-    y = df[target_column]
-
-    from sklearn.model_selection import train_test_split
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.metrics import accuracy_score
-
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-
-    model = LogisticRegression(max_iter=1000)
-    model.fit(X_train, y_train)
-
-    y_pred = model.predict(X_test)
-    accuracy = round(accuracy_score(y_test, y_pred) * 100, 2)
-
-    save_model(model)
-
-    return render_template(
-        "ai.html",
-        success="Model trained successfully!",
-        accuracy=accuracy
-    )
 # ================= RUN =================
 
 if __name__ == "__main__":
