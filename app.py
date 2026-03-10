@@ -292,6 +292,7 @@ def train_model():
         return redirect(url_for("login"))
 
     if request.method == "POST":
+
         file = request.files.get("file")
 
         if not file:
@@ -300,57 +301,67 @@ def train_model():
         try:
             df = pd.read_csv(file)
 
-            # Required target column
-            target_column = "result"
+            columns = list(df.columns)
 
-            if target_column not in df.columns:
-                return render_template(
-                    "ai.html",
-                    error=f"Training file must contain target column '{target_column}'"
-                )
-
-            # Separate features and target
-            X = df.drop(columns=[target_column])
-            y = df[target_column]
-
-            if X.shape[1] == 0:
-                return render_template(
-                    "ai.html",
-                    error="No feature columns found"
-                )
-
-            from sklearn.linear_model import LogisticRegression
-            from sklearn.model_selection import train_test_split
-            from sklearn.metrics import accuracy_score
-
-            # Split data
-            X_train, X_test, y_train, y_test = train_test_split(
-                X, y, test_size=0.2, random_state=42
-            )
-
-            model = LogisticRegression(max_iter=1000)
-            model.fit(X_train, y_train)
-
-            # Accuracy
-            y_pred = model.predict(X_test)
-            accuracy = accuracy_score(y_test, y_pred)
-
-            save_model(model)
+            # Store dataframe temporarily in session
+            session["dataset"] = df.to_json()
 
             return render_template(
                 "ai.html",
-                success="Model trained successfully!",
-                accuracy=round(accuracy * 100, 2),
-                columns=list(X.columns)
+                columns=columns
             )
 
         except Exception as e:
-            return render_template(
-                "ai.html",
-                error=f"Invalid file format: {str(e)}"
-            )
+            return render_template("ai.html", error=str(e))
 
     return render_template("ai.html")
+
+@app.route("/train_model_select", methods=["POST"])
+def train_model_select():
+
+    if "user" not in session:
+        return redirect(url_for("login"))
+
+    if "dataset" not in session:
+        return render_template("ai.html", error="Upload dataset first")
+
+    try:
+        df = pd.read_json(session["dataset"])
+
+        target_column = request.form.get("target_column")
+
+        if target_column not in df.columns:
+            return render_template("ai.html", error="Invalid target column")
+
+        X = df.drop(columns=[target_column])
+        y = df[target_column]
+
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+
+        X_train, X_test, y_train, y_test = train_test_split(
+            X, y, test_size=0.2, random_state=42
+        )
+
+        model = LogisticRegression(max_iter=1000)
+        model.fit(X_train, y_train)
+
+        y_pred = model.predict(X_test)
+
+        accuracy = accuracy_score(y_test, y_pred)
+        accuracy = round(accuracy * 100, 2)
+
+        save_model(model)
+
+        return render_template(
+            "ai.html",
+            success="Model trained successfully",
+            accuracy=accuracy
+        )
+
+    except Exception as e:
+        return render_template("ai.html", error=str(e))
 # ================= RUN =================
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 
 {% block content %}
 
+<!-- ================= MODEL TRAINER ================= -->
+
 <div class="card p-4 shadow">
     <h2 class="mb-3">AI Model Trainer</h2>
 
@@ -9,7 +11,8 @@
         <div class="mb-3">
             <input type="file" class="form-control" name="file" required>
         </div>
-        <button class="btn btn-primary">Train Model</button>
+
+        <button class="btn btn-primary">Upload Dataset</button>
     </form>
 
     {% if accuracy %}
@@ -23,23 +26,73 @@
             {{ error }}
         </div>
     {% endif %}
+
 </div>
 
+
+<!-- ================= TARGET COLUMN SELECTION ================= -->
+
+{% if columns %}
+
 <div class="card p-4 shadow mt-4">
+
+    <h4>Select Target Column</h4>
+
+    <form method="POST" action="/train_model_select">
+
+        <div class="mb-3">
+
+            <select class="form-control" name="target_column" required>
+
+                {% for col in columns %}
+                    <option value="{{ col }}">{{ col }}</option>
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+        <button class="btn btn-success">Train Model</button>
+
+    </form>
+
+</div>
+
+{% endif %}
+
+
+<!-- ================= MANUAL PREDICTION ================= -->
+
+<div class="card p-4 shadow mt-4">
+
     <h3>Predict Result</h3>
 
     <form method="POST">
+
         <div class="row">
+
             <div class="col">
-                <input type="number" step="any" class="form-control"
-                       name="hours" placeholder="Hours Studied" required>
+                <input type="number"
+                       step="any"
+                       class="form-control"
+                       name="hours"
+                       placeholder="Hours Studied"
+                       required>
             </div>
+
             <div class="col">
-                <input type="number" step="any" class="form-control"
-                       name="marks" placeholder="Marks" required>
+                <input type="number"
+                       step="any"
+                       class="form-control"
+                       name="marks"
+                       placeholder="Marks"
+                       required>
             </div>
+
         </div>
+
         <button class="btn btn-success mt-3">Predict</button>
+
     </form>
 
     {% if prediction %}
@@ -47,6 +100,7 @@
             Prediction: {{ prediction }}
         </div>
     {% endif %}
+
 </div>
 
 {% endblock %}
